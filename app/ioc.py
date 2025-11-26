@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 
 from app.core import cfg
 from app.database import Database
+from app.services.users import UserService
 
 
 class ServicesProvider(Provider):
@@ -13,7 +14,7 @@ class ServicesProvider(Provider):
 
     @provide(scope=Scope.APP)
     async def database(self) -> AsyncIterable[Database]:
-        autoupgrade = False # or make it depend from cfg.debug
+        autoupgrade = False  # or make it depend from cfg.debug
         db = Database(cfg.db_url, autoupgrade)
         await db.startup()
         try:
@@ -25,3 +26,12 @@ class ServicesProvider(Provider):
     async def redis(self) -> AsyncIterable[Redis]:
         redis = Redis.from_url(cfg.redis_url)
         yield redis
+
+    @provide(scope=Scope.APP)
+    async def user_service(self, db: Database) -> AsyncIterable[UserService]:
+        service = UserService(db)
+        try:
+            await service.startup()
+            yield service
+        finally:
+            await service.shutdown()
