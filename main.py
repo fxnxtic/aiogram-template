@@ -16,7 +16,7 @@ logger = structlog.getLogger(__name__)
 
 
 async def main():
-    init_logging(*cfg.mute_loggers, debug=cfg.debug)
+    init_logging(cfg.mute_loggers, debug=cfg.debug)
 
     logger.info("Starting application...")
 
