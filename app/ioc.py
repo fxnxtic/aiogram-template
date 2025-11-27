@@ -6,6 +6,7 @@ from dishka import Provider, Scope, provide
 from raito import Raito
 from redis.asyncio import Redis
 
+from app.bot.handlers import HANDLERS_DIR
 from app.bot.setup import (
     setup_bot,
     setup_dispatcher,
@@ -51,6 +52,21 @@ class ServicesProvider(Provider):
     async def bot(self) -> AsyncIterable[Bot]:
         bot = await setup_bot(cfg.bot_token, cfg.bot_api_url)
         yield bot
+
+    @provide(scope=Scope.APP)
+    async def raito(self, dp: Dispatcher, storage: BaseStorage) -> AsyncIterable[Raito]:
+        raito = await setup_raito(
+            dispatcher=dp,
+            routers_dir=HANDLERS_DIR,
+            developers=cfg.developers,
+            locales=["en", "ru"],
+            production=not cfg.debug,
+            configuration=None,
+            storage=storage,
+        )
+        
+        await raito.setup()
+        yield raito
 
     @provide(scope=Scope.APP)
     async def user_service(self, db: Database) -> AsyncIterable[UserService]:
